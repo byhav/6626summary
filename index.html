@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EME 6626 Summary Quest</title>
+<style>
+  :root{
+    --navy:#00205B; --navy-2:#1B3A7A; --ink:#1A1F2B; --muted:#4B5565;
+    --bg:#F4F6FA; --card:#FFFFFF; --line:#D9DEE8;
+    --green:#1E7B3A; --green-bg:#E7F5EC; --red:#B3261E; --red-bg:#FCEBEA;
+    --gold:#F2A900; --gold-ink:#7A5400; --amber-bg:#FFF6DD;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.55;font-size:17px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  button,input,select,textarea{font:inherit}
+  :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  /* Header / HUD */
+  .top{background:var(--navy);color:#fff;padding:18px 16px 16px}
+  .top-inner{max-width:880px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+  .brand h1{margin:0;font-size:1.45rem;letter-spacing:.2px}
+  .brand p{margin:2px 0 0;color:#C9D4EA;font-size:.92rem}
+  .hud{display:flex;gap:8px;flex-wrap:wrap;position:relative}
+  .chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:999px;
+    padding:6px 12px;font-size:.88rem;white-space:nowrap}
+  .chip b{color:#FFD45C}
+  .xp-pop{position:absolute;right:0;top:-6px;color:#FFD45C;font-weight:800;opacity:0;pointer-events:none}
+  .xp-pop.go{animation:pop 1.1s ease-out}
+  @keyframes pop{0%{opacity:0;transform:translateY(8px)}20%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+
+  main{max-width:880px;margin:0 auto;padding:22px 16px 48px}
+  .view-title{font-size:1.6rem;line-height:1.25;margin:4px 0 12px;color:var(--navy)}
+  .view-title:focus{outline:none}
+  .eyebrow{margin:0;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+  .lead{font-size:1.05rem;color:var(--muted);margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin:0 0 18px}
+  .card h3{margin:0 0 6px;font-size:1rem;color:var(--navy)}
+  .card p{margin:0 0 10px}
+  .card p:last-child{margin-bottom:0}
+  .rules{background:var(--amber-bg);border-color:#F1DFA6}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;border:2px solid var(--navy);
+    background:#fff;color:var(--navy);padding:10px 18px;font-weight:700;cursor:pointer;min-height:44px}
+  .btn:hover{background:#EEF2FA}
+  .btn.primary{background:var(--navy);color:#fff}
+  .btn.primary:hover{background:var(--navy-2)}
+  .btn.link{border:none;background:none;padding:8px 4px;text-decoration:underline;color:var(--navy);font-weight:600}
+  .btn.danger{border-color:var(--red);color:var(--red)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px}
+  .actions.center{justify-content:center}
+
+  /* Map trail */
+  .trail{list-style:none;margin:0 0 18px;padding:0;position:relative}
+  .trail li{position:relative;padding-left:0;margin:0 0 12px}
+  .trail li:not(:last-child)::after{content:"";position:absolute;left:31px;top:58px;bottom:-14px;border-left:3px dashed #B7C2D8}
+  .stop{width:100%;display:flex;align-items:center;gap:16px;text-align:left;background:var(--card);border:2px solid var(--line);
+    border-radius:var(--radius);padding:12px 16px 12px 10px;cursor:pointer;color:var(--ink)}
+  .stop:hover:not([disabled]){border-color:var(--navy)}
+  .stop[disabled]{cursor:not-allowed;opacity:.6}
+  .node{flex:0 0 44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1.1rem;
+    background:#E4E9F3;color:var(--muted);position:relative;z-index:1}
+  .stop.is-open .node{background:var(--gold);color:#3A2800;box-shadow:0 0 0 5px rgba(242,169,0,.25)}
+  .stop.is-done .node{background:var(--green);color:#fff}
+  .stop-text{display:flex;flex-direction:column}
+  .stop-title{font-weight:700;color:var(--navy)}
+  .stop-meta{font-size:.88rem;color:var(--muted)}
+
+  /* Question */
+  .dots{display:flex;gap:6px;margin:8px 0 10px}
+  .dots span{width:28px;height:6px;border-radius:3px;background:#D5DBE7}
+  .dots span.on{background:var(--gold)}
+  .dots span.past{background:var(--navy)}
+  .station-xp{display:inline-block;margin-left:8px;background:#FFF1C7;color:var(--gold-ink);border-radius:999px;padding:1px 10px;
+    font-size:.8rem;text-transform:none;letter-spacing:0}
+  .q-prompt{font-size:1.3rem}
+  .help{color:var(--muted);font-size:.92rem;margin:0 0 8px}
+  fieldset{border:none;margin:0;padding:0;min-width:0}
+  .choices{display:grid;gap:10px}
+  .choice{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:2px solid var(--line);border-radius:12px;
+    padding:12px 14px;cursor:pointer}
+  .choice input{margin-top:5px;width:18px;height:18px;accent-color:var(--navy);flex:0 0 auto}
+  .choice:has(input:checked){border-color:var(--navy);background:#EEF2FA}
+  .right{border-color:var(--green) !important;background:var(--green-bg) !important}
+  .wrong{border-color:var(--red) !important;background:var(--red-bg) !important}
+
+  .order{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  .order-item{display:flex;align-items:center;gap:12px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px 10px}
+  .order-pos{flex:0 0 30px;height:30px;border-radius:50%;background:#E4E9F3;display:grid;place-items:center;font-weight:800;color:var(--navy)}
+  .order-text{flex:1}
+  .order-btns{display:flex;gap:6px}
+  .icon-btn{width:44px;height:44px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--navy);cursor:pointer;font-size:1rem}
+  .icon-btn:hover:not([disabled]){border-color:var(--navy)}
+  .icon-btn[disabled]{opacity:.35;cursor:default}
+
+  .classify{display:grid;gap:10px}
+  .crow{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 12px}
+  .crow-label{font-weight:600;padding:0;margin-bottom:8px;float:left;width:100%}
+  .seg{display:flex;flex-wrap:wrap;gap:6px;clear:both}
+  .seg-opt{position:relative;cursor:pointer}
+  .seg-opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+  .seg-opt span{display:inline-block;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.92rem;background:#fff}
+  .seg-opt input:checked + span{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .seg-opt input:focus-visible + span{outline:3px solid var(--gold);outline-offset:2px}
+  .seg-opt input:disabled + span{cursor:default}
+
+  .match{display:grid;gap:10px}
+  .mrow{display:grid;grid-template-columns:1fr minmax(150px,220px);gap:12px;align-items:center;background:var(--card);
+    border:2px solid var(--line);border-radius:12px;padding:10px 12px}
+  .mrow select{width:100%;padding:9px 10px;border-radius:8px;border:2px solid var(--line);background:#fff;min-height:44px}
+  @media (max-width:560px){.mrow{grid-template-columns:1fr}}
+
+  .feedback{margin-top:10px;border-radius:12px;padding:0}
+  .feedback:not(:empty){padding:12px 16px;border:2px solid var(--line);background:#fff}
+  .feedback.good{border-color:var(--green);background:var(--green-bg)}
+  .feedback.bad{border-color:var(--red);background:var(--red-bg)}
+  .feedback.warn{border-color:#E0B43A;background:var(--amber-bg)}
+  .feedback strong{display:block;margin-bottom:4px}
+  .feedback p{margin:4px 0 0}
+
+  /* Exhibit (relay) */
+  .exhibit{background:#0F1B3D;color:#E9EEF9;border-radius:var(--radius);padding:16px 18px;margin:6px 0 16px}
+  .exhibit-tag{margin:0 0 10px;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#FFD45C;font-weight:700}
+  .relay{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  .relay li{border-left:4px solid #FFD45C;padding:4px 0 4px 12px}
+  .relay li:first-child{border-left-color:#7FD1A0}
+  .relay-step{display:block;font-size:.8rem;color:#AFC0E3;font-weight:600}
+  .relay-text{display:block}
+
+  /* Badges */
+  .center{text-align:center}
+  .badge-big{width:132px;height:132px;margin:8px auto 4px;display:block}
+  .center .badge-big{animation:stamp .6s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes stamp{0%{transform:scale(.3) rotate(-25deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+  .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin:8px 0 18px}
+  .badge-cell{margin:0;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px}
+  .badge-cell svg{width:64px;height:64px}
+  .badge-cell figcaption{font-size:.85rem;font-weight:600;color:var(--navy)}
+  .badge-cell:not(.earned) figcaption{color:var(--muted)}
+
+  .reflect textarea,.copybox{width:100%;border:2px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink)}
+  .ta-label{display:block;font-weight:600;margin:18px 0 6px}
+  .adopters legend{font-weight:700;color:var(--navy);margin-bottom:8px;font-size:1.05rem}
+
+  .confetti{position:fixed;top:-12px;width:9px;height:14px;border-radius:2px;z-index:50;pointer-events:none;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+  @media (prefers-reduced-motion: reduce){
+    .xp-pop.go,.center .badge-big{animation:none}
+    .confetti{display:none}
+  }
+  footer{max-width:880px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <h1>EME 6626 Summary Quest</h1>
+      <p>Fall 2026 end-of-course review · Modules 1 to 11</p>
+    </div>
+    <div class="hud" aria-label="Your progress">
+      <span class="chip">XP <b id="hud-xp">0</b> / <span id="hud-max">0</span></span>
+      <span class="chip">Badges <b id="hud-badges">0</b> / <span id="hud-bmax">0</span></span>
+      <span class="chip">Rank <b id="hud-rank">Laggard</b></span>
+      <span class="xp-pop" id="xp-pop" aria-hidden="true">+10 XP</span>
+    </div>
+  </div>
+</header>
+<main id="app" tabindex="-1"></main>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<footer>Progress saves in this browser only. Nothing you enter is sent anywhere.</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- Content ---------------- */
+var RELAY = '<p class="exhibit-tag">Practice relay · invented example</p>' +
+  '<ol class="relay">' +
+  '<li><span class="relay-step">Original mission</span><span class="relay-text">An elderly lighthouse keeper rings a brass bell through thick fog to warn a fishing boat away from the rocks.</span></li>' +
+  '<li><span class="relay-step">Station 1 · Model A · retell it as a story pitch</span><span class="relay-text">On a fog-bound night, an aging lighthouse keeper sounds the old brass bell, guiding a small fishing boat clear of the rocks.</span></li>' +
+  '<li><span class="relay-step">Station 2 · Model B · condense it to one poster line</span><span class="relay-text">A lone figure on a misty shore keeps watch over a fishing boat at night.</span></li>' +
+  '<li><span class="relay-step">Station 3 · Model C · write an image prompt</span><span class="relay-text">A woman waiting on the pier at dusk, misty harbor, a fishing boat returning, soft golden light, cinematic.</span></li>' +
+  '</ol>';
+
+var STATIONS = [
+  {
+    id:"start", title:"Where We Started", modules:"Modules 1, 5, 7", badge:"Curve Reader", color:"#2B6CB0",
+    summary:[
+      "We opened with two questions: what current educational challenges might emerging technology address, and what will education look like once it's integrated? Every module since has been an attempt to answer them.",
+      "Rogers (2003) gave us the vocabulary. An innovation is anything perceived as new by the person adopting it, and adopters fall along a curve from innovators to laggards. We met tools first and looked for uses second, so one rule held all semester: technology belongs in a design only when a specific challenge calls for it."
+    ],
+    questions:[
+      {type:"order", prompt:"Put Rogers' adopter categories in order, first to adopt at the top.",
+        items:["Innovators","Early adopters","Early majority","Late majority","Laggards"],
+        explain:"Rogers' curve runs innovators (2.5%), early adopters (13.5%), early majority (34%), late majority (34%), and laggards (16%)."},
+      {type:"mcq", prompt:"In Spencer Johnson's story, which character stays at Cheese Station C and gets left behind?",
+        options:["Sniff","Scurry","Haw","Hem"], answer:3,
+        explain:"Sniff and Scurry adapt fast. Haw resists at first, then sets out and finds New Cheese. Hem keeps waiting for the old cheese to come back."},
+      {type:"mcq", prompt:"Which statement matches the rule we followed all semester?",
+        options:["Pick the newest tool, then find a problem for it.","Use technology only when a specific challenge calls for it.","Use whatever platform the client already owns.","Choose tools ranked in the Top 10."], answer:1,
+        explain:"The course structure put tools in front of you first, which made it tempting to map a tool to a problem. The challenge comes first."}
+    ]
+  },
+  {
+    id:"design", title:"Design Thinking", modules:"Modules 1 to 4, 10", badge:"Rough Sketcher", color:"#6B46C1",
+    summary:[
+      "Design thinking replaced a sequential ID model as our approach, with Boller and Fletcher (2020) as the guide. You were learning new platforms while designing for real clients, so your design documents and storyboards stayed living documents.",
+      "Module 10 added Bill Buxton: sketches invite exploration, prototypes invite refinement. Generative AI makes polish nearly free, and that's the fidelity trap. A finished-looking draft draws comments on wording and color instead of on whether the learning approach holds up."
+    ],
+    questions:[
+      {type:"classify", prompt:"Sketch or prototype? Sort each trait using Buxton's distinction.",
+        bins:["Sketch","Prototype"],
+        items:[
+          {text:"Invites exploration", bin:"Sketch"},
+          {text:"Invites refinement", bin:"Prototype"},
+          {text:"Gray boxes and placeholder narration", bin:"Sketch"},
+          {text:"A styled deck with final fonts and images", bin:"Prototype"},
+          {text:"Draws comments on wording and color", bin:"Prototype"},
+          {text:"Quick, loose, and easy to throw away", bin:"Sketch"}
+        ],
+        explain:"Keep early versions rough on purpose and add polish only after the concept survives testing with learners."},
+      {type:"mcq", prompt:"What is the fidelity trap?",
+        options:["Low-resolution images reduce learner trust.","Polish makes reviewers comment on surface details instead of the learning approach.","AI tools can't produce high-quality media yet.","A prototype must match the final platform exactly."], answer:1,
+        explain:"A polished prototype looks finished, so feedback shifts to wording and color. The question that matters, whether the approach helps learners, goes unasked."},
+      {type:"mcq", prompt:"Why did this course use design thinking instead of a sequential ID model?",
+        options:["Sequential models don't include evaluation.","Clients required it in their agreements.","You were learning new platforms while designing for real clients.","Design thinking skips learner analysis."], answer:2,
+        explain:"You needed to understand what a platform could do before locking in a design, so prototyping came before a finished design document."}
+    ]
+  },
+  {
+    id:"hype", title:"Hype, Ethics, and XR", modules:"Modules 2, 4", badge:"Hype Spotter", color:"#C05621",
+    summary:[
+      "Gartner's hype cycle helped us judge timing. Generative AI was heading into the Trough of Disillusionment on the June 2025 AI cycle. Cherner and Foulger (2024) gave us four levels of ethical questions for adopting genAI.",
+      "VR is the most researched form of extended reality. AR has a 30-year history in education but still lags expectations. The metaverse Mystakidis (2022) describes is interconnected, yet you still can't join a classmate in Spatial from Engage. Pedagogy comes before the headset."
+    ],
+    questions:[
+      {type:"mcq", prompt:"Where was generative AI on Gartner's June 2025 hype cycle for AI?",
+        options:["Innovation Trigger","Peak of Inflated Expectations","Heading into the Trough of Disillusionment","Plateau of Productivity"], answer:2,
+        explain:"GenAI was sliding toward the Trough, and the backlash since then fits that position. Mainstream adoption is still a few years out."},
+      {type:"match", prompt:"Match each guiding question to its Cherner and Foulger (2024) level.", sortOptions:true,
+        pairs:[
+          {left:"How is genAI used for instructional purposes?", right:"Level 1"},
+          {left:"Does it follow ethical and legal guidelines for data use and revenue?", right:"Level 2"},
+          {left:"How accurate and truthful is what it produces?", right:"Level 3"},
+          {left:"What benefits does it offer educators and students?", right:"Level 4"}
+        ],
+        explain:"Level 1 is instructional use, Level 2 covers fair use, privacy, transparency, and profit, Level 3 covers bias, hallucinations, and cross-referencing, and Level 4 covers benefits."},
+      {type:"mcq", prompt:"Why can't we point to the metaverse Mystakidis (2022) describes?",
+        options:["Headsets aren't commercially available.","The platforms are disconnected. You can't join someone in Spatial from Engage.","No platform supports avatars.","Gartner removed it from the hype cycle."], answer:1,
+        explain:"The definition calls for an interconnected web of persistent spaces. Today's platforms are islands, and attention shifted to AI after ChatGPT arrived in November 2022."}
+    ]
+  },
+  {
+    id:"relay", title:"Generative AI Up Close", modules:"Modules 5, 6", badge:"Relay Agent", color:"#2C7A7B",
+    exhibit:RELAY,
+    summary:[
+      "Sixteen of 19 of you answered the AI survey: 69% used AI on the job and 94% used it outside the job. So Module 6 tested how AI behaves instead of touring chatbots.",
+      "In Operation Relay, each mission passed through three language models and an image model, with every output pasted forward unedited. The challenge uses a practice relay (an invented example) to test your eye for drift."
+    ],
+    questions:[
+      {type:"mcq", prompt:"At which station did the lighthouse keeper and the bell disappear?",
+        options:["Station 1","Station 2","Station 3","They survived to the end."], answer:1,
+        explain:"Station 2 compressed the keeper into \u201ca lone figure\u201d and dropped the bell and the rocks. Once a detail leaves the chain, no later model can recover it."},
+      {type:"classify", prompt:"Compare the original mission to the final image prompt. Did each detail survive, get lost, or get added?",
+        bins:["Survived","Lost","Added"],
+        items:[
+          {text:"Fog or mist", bin:"Survived"},
+          {text:"The fishing boat", bin:"Survived"},
+          {text:"The brass bell", bin:"Lost"},
+          {text:"The rocks", bin:"Lost"},
+          {text:"A woman waiting on the pier", bin:"Added"},
+          {text:"Soft golden light at dusk", bin:"Added"}
+        ],
+        explain:"The warning, the whole point of the mission, vanished. Model C then filled the gap with a scene of its own."},
+      {type:"mcq", prompt:"What does a relay like this suggest about chained AI pipelines with no human review?",
+        options:["Later models correct earlier mistakes.","Image models preserve details better than text models.","Meaning shifts at each handoff, and nothing in the chain notices.","Drift only happens when a model refuses."], answer:2,
+        explain:"Each model treats its input as the truth. Without a person checking the output against the original, errors compound quietly."}
+    ]
+  },
+  {
+    id:"tools", title:"Top 100 Tools for Learning", modules:"Modules 7 to 10", badge:"Toolsmith", color:"#B83280",
+    summary:[
+      "Jane Hart's 20th annual list sorted 100 tools into four categories: Communication and Collaboration (32), Personal Learning and Productivity (20), Research and Writing (19), and Content Creation and Media Development (29).",
+      "Along the way we covered Dillenbourg's requirements for collaborative learning, Tuckman's team stages, personal learning environments and wearables, research and writing tools, and generative media tools that turn a script into a video in minutes."
+    ],
+    questions:[
+      {type:"classify", prompt:"Sort each tool into its category on the 2026 list.",
+        bins:["Comm. & Collab.","Personal Learning","Research & Writing","Content Creation"],
+        items:[
+          {text:"Zoom (#11)", bin:"Comm. & Collab."},
+          {text:"Mentimeter (#24)", bin:"Comm. & Collab."},
+          {text:"YouTube (#2)", bin:"Personal Learning"},
+          {text:"Duolingo (#42)", bin:"Personal Learning"},
+          {text:"NotebookLM (#7)", bin:"Research & Writing"},
+          {text:"Zotero (#100)", bin:"Research & Writing"},
+          {text:"Canva (#10)", bin:"Content Creation"},
+          {text:"Synthesia (#44)", bin:"Content Creation"}
+        ],
+        explain:"The categories are loose groupings. YouTube is a personal learning tool for most of us, even though it's also a place to publish."},
+      {type:"mcq", prompt:"Which tool ranked #1 on the 2026 list?",
+        options:["YouTube","PowerPoint","ChatGPT","Google Docs & Drive"], answer:2,
+        explain:"ChatGPT took #1, YouTube #2, and Gemini #3. PowerPoint sat at #4."},
+      {type:"mcq", prompt:"Which of these is NOT one of Dillenbourg's (1999) three processes in collaborative learning?",
+        options:["Internalization","Appropriation","Mutual modeling","Delegation"], answer:3,
+        explain:"Dividing tasks by role is closer to cooperative learning. Collaboration learns through disagreement, rephrasing each other's ideas, and modeling tasks for one another."},
+      {type:"mcq", prompt:"About what share of Canvas access at UWF comes from smartphones?",
+        options:["About 10%","Over 31%","Over 60%","About 90%"], answer:1,
+        explain:"Smartphone access has held above 31% for five years, which makes mobile-first design a practical requirement."}
+    ]
+  },
+  {
+    id:"iot", title:"The Internet of Things", modules:"Modules 8, 11", badge:"Loop Auditor", color:"#2F855A",
+    summary:[
+      "Every IoT system runs the same loop. The ethics sit in the questions at each step: what's measured and about whom, where the data goes, who wrote the rule, and whether the person acted upon knows it.",
+      "Most cases were warnings: RFID attendance badges, school facial recognition, EEG headbands, classroom beacons, warehouse scanners, and a fitness heatmap that outlined military bases. Hand hygiene badges were the success, with a narrow purpose and data scaled to it."
+    ],
+    questions:[
+      {type:"order", prompt:"Put the stuffy training room example in loop order, first step at the top.",
+        items:["A wall sensor reads carbon dioxide at 1,350 ppm.","The reading travels over Wi-Fi to the building system.","A rule compares it to a 1,000 ppm threshold and flags the room.","Ventilation increases and the facilitator is prompted to call a break."],
+        explain:"Sense, connect, analyze, act. Swap the CO2 sensor for a camera tracking eye movement and the loop is identical. Only the answers to the ethical questions change."},
+      {type:"classify", prompt:"For each system, decide whether it mostly does something for people or to them.",
+        bins:["For them","To them"],
+        items:[
+          {text:"An NFC tag that pulls up the job aid for the exact machine", bin:"For them"},
+          {text:"EEG headbands showing each child's concentration on a screen", bin:"To them"},
+          {text:"A badge that buzzes when no hand rub is detected within 60 seconds", bin:"For them"},
+          {text:"Beacons that email an adviser when a student is two minutes late", bin:"To them"},
+          {text:"A CO2 sensor that prompts the facilitator to call a break", bin:"For them"},
+          {text:"Warehouse scanners that log every break under 10 minutes", bin:"To them"}
+        ],
+        explain:"The hand hygiene badge is the closest call. Ask what would change if its log went to a manager every week."},
+      {type:"mcq", prompt:"Why did New York ban facial recognition in schools in 2023?",
+        options:["The cameras couldn't connect to the school's Wi-Fi.","A state IT report found risks may outweigh benefits, with higher false-positive rates for people of color.","Federal law already prohibited it.","Students disabled the cameras."], answer:1,
+        explain:"After Lockport's $1.4 million system, the report concluded the technology may only offer the appearance of safer schools."}
+    ]
+  },
+  {
+    id:"projects", title:"Projects and Tool Reviews", modules:"Modules 3 to 11", badge:"Client Ready", color:"#975A16",
+    summary:[
+      "The Emerging Technology Project counted for 65% of your grade, and every project had a real client: ESOL avatars and an ESOL Canvas lesson for Dr. Shim Lew, leadership role plays for Dr. Aneta Walker, Parchment badges, Swift Playground apps, and Innovation Lab professional development.",
+      "Three tool reviews ran alongside the project, each requiring evidence that you used the tool yourself."
+    ],
+    questions:[
+      {type:"match", prompt:"Match each project component to its share of the project grade.", sortOptions:true,
+        pairs:[
+          {left:"Weekly Project Updates", right:"20%"},
+          {left:"Draft Design Document and Storyboard", right:"20%"},
+          {left:"Final Deliverable/Product", right:"50%"},
+          {left:"Project Presentation Video", right:"10%"}
+        ],
+        explain:"Half the project grade rode on the deliverable. The other half rewarded the process: updates, design documents, and the presentation."},
+      {type:"mcq", prompt:"How much of the overall course grade did the Emerging Technology Project count for?",
+        options:["35%","50%","65%","80%"], answer:2,
+        explain:"65% of the course grade, which is why the project ran from Module 5 to the end."},
+      {type:"mcq", prompt:"In the rose, thorn, and bud reflection, what does the bud ask?",
+        options:["What went well?","What didn't go well?","What opportunities exist for a better experience in the future?","Who deserves credit on the team?"], answer:2,
+        explain:"Rose is what went well, thorn is what didn't, and bud looks ahead."},
+      {type:"mcq", prompt:"What did every tool review have to include?",
+        options:["A vendor demo video","A price comparison with three competitors","An example of your own use, such as an artifact, screenshots, or a video","An endorsement from a classmate"], answer:2,
+        explain:"A review of a tool you haven't touched is a summary of its marketing page."}
+    ]
+  },
+  {
+    id:"reflect", title:"Back to the Two Questions", modules:"Full course", badge:"Full Circle", color:"#00205B", type:"reflect",
+    summary:[
+      "Emerging technology addressed real challenges this semester when a client's problem came first. It failed when the tool came first, as the Northside badges and the Hangzhou headbands show.",
+      "Operation Relay, the fidelity trap, and the IoT cases share a pattern: no person exercised judgment at the point where it mattered. The future of these tools depends less on which ones survive the hype cycle and more on where we insist a human checks the output, tests the design with real learners, or limits the data."
+    ],
+    questions:[]
+  }
+];
+
+var KEY = "eme6626-summary-quest-fa26";
+var MAX_XP = STATIONS.reduce(function(s,st){ return s + st.questions.length*10; }, 0);
+var ADOPTERS = ["Innovator","Early adopter","Early majority","Late majority","Laggard"];
+
+/* ---------------- State ---------------- */
+function load(){ try{ var s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+var state = load() || {done:{}, reflection:{adopter:null, text:""}};
+if(!state.done) state.done = {};
+if(!state.reflection) state.reflection = {adopter:null, text:""};
+
+var S = {i:0, q:0, attempts:0, xp:0};
+var app = document.getElementById("app");
+var live = document.getElementById("live");
+var uidN = 0;
+function uid(){ uidN++; return "u" + uidN; }
+
+/* ---------------- Helpers ---------------- */
+function el(tag, attrs){
+  var e = document.createElement(tag);
+  attrs = attrs || {};
+  Object.keys(attrs).forEach(function(k){
+    var v = attrs[k];
+    if(k === "class") e.className = v;
+    else if(k === "html") e.innerHTML = v;
+    else if(k.indexOf("on") === 0 && typeof v === "function") e.addEventListener(k.slice(2), v);
+    else if(v === true) e.setAttribute(k, "");
+    else if(v !== false && v != null) e.setAttribute(k, v);
+  });
+  for(var i = 2; i < arguments.length; i++) append(e, arguments[i]);
+  return e;
+}
+function append(e, kid){
+  if(kid == null || kid === false) return;
+  if(Array.isArray(kid)){ kid.forEach(function(k){ append(e,k); }); return; }
+  e.appendChild(kid.nodeType ? kid : document.createTextNode(String(kid)));
+}
+function shuffle(a){
+  a = a.slice();
+  for(var i = a.length-1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function shuffledDifferent(a){
+  if(a.length < 2) return a.slice();
+  var s;
+  do { s = shuffle(a); } while(s.every(function(x,i){ return x === a[i]; }));
+  return s;
+}
+function totalXP(){ return STATIONS.reduce(function(s,st){ return s + (state.done[st.id] ? state.done[st.id].xp : 0); }, 0); }
+function badgeCount(){ return STATIONS.filter(function(st){ return state.done[st.id]; }).length; }
+function isUnlocked(i){ return i === 0 || !!state.done[STATIONS[i-1].id]; }
+function allDone(){ return STATIONS.every(function(st){ return state.done[st.id]; }); }
+
+function rank(xp){
+  var p = MAX_XP ? xp / MAX_XP : 0;
+  if(p >= 0.9) return {name:"Innovator", text:"You cleared nearly every challenge on the first try. Rogers would put you at the front of the curve."};
+  if(p >= 0.75) return {name:"Early Adopter", text:"Strong recall across the course, with a few second tries along the way."};
+  if(p >= 0.55) return {name:"Early Majority", text:"Solid ground on most stations. Replay one or two to climb the curve."};
+  if(p >= 0.35) return {name:"Late Majority", text:"You've got the big ideas. Replay a station or two and your rank will climb."};
+  return {name:"Laggard", text:"Even Haw found New Cheese eventually. Replay any station to raise your best score."};
+}
+
+function updateHud(){
+  document.getElementById("hud-xp").textContent = totalXP();
+  document.getElementById("hud-max").textContent = MAX_XP;
+  document.getElementById("hud-badges").textContent = badgeCount();
+  document.getElementById("hud-bmax").textContent = STATIONS.length;
+  document.getElementById("hud-rank").textContent = rank(totalXP()).name;
+}
+function popXp(n){
+  var p = document.getElementById("xp-pop");
+  p.textContent = "+" + n + " XP";
+  p.classList.remove("go"); void p.offsetWidth; p.classList.add("go");
+}
+function mount(view){
+  app.innerHTML = "";
+  app.appendChild(view);
+  var h = view.querySelector(".view-title");
+  if(h){ h.focus({preventScroll:true}); }
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function backBtn(){ return el("button", {class:"btn link", type:"button", onclick:renderMap}, "\u2190 Course map"); }
+
+function badgeSvg(i, earned, cls){
+  var st = STATIONS[i];
+  var c = earned ? st.color : "#B8C0CF";
+  var ns = "http://www.w3.org/2000/svg";
+  var svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox","0 0 100 100");
+  svg.setAttribute("aria-hidden","true");
+  if(cls) svg.setAttribute("class", cls);
+  svg.innerHTML =
+    '<path d="M32 58 L22 96 L38 86 L46 98 L52 62 Z" fill="' + c + '" opacity=".75"/>' +
+    '<path d="M68 58 L78 96 L62 86 L54 98 L48 62 Z" fill="' + c + '" opacity=".75"/>' +
+    '<circle cx="50" cy="42" r="36" fill="' + (earned ? "#F2A900" : "#D5DBE7") + '"/>' +
+    '<circle cx="50" cy="42" r="29" fill="' + c + '"/>' +
+    '<circle cx="50" cy="42" r="24" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="3 3"/>' +
+    '<text x="50" y="51" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="800" fill="#fff">' + (earned ? (i+1) : "?") + '</text>';
+  return svg;
+}
+function celebrate(){
+  try{ if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; }catch(e){}
+  var colors = ["#F2A900","#00205B","#1E7B3A","#B83280","#2B6CB0","#C05621"];
+  for(var k = 0; k < 60; k++){
+    var d = document.createElement("div");
+    d.className = "confetti";
+    d.style.left = (Math.random()*100) + "vw";
+    d.style.background = colors[k % colors.length];
+    d.style.animationDuration = (1.6 + Math.random()*1.6) + "s";
+    d.style.animationDelay = (Math.random()*0.4) + "s";
+    document.body.appendChild(d);
+    setTimeout((function(n){ return function(){ n.remove(); }; })(d), 3800);
+  }
+}
+
+/* ---------------- Question types ---------------- */
+var TYPES = {
+  mcq: function(q){
+    var name = uid();
+    var fs = el("fieldset", {class:"choices"}, el("legend", {class:"sr-only"}, "Choose one answer"));
+    var items = q.options.map(function(o, idx){
+      var id = name + "_" + idx;
+      var inp = el("input", {type:"radio", name:name, id:id, value:String(idx)});
+      var lab = el("label", {for:id, class:"choice"}, inp, el("span", null, o));
+      fs.appendChild(lab);
+      return {inp:inp, lab:lab};
+    });
+    return {
+      el: fs,
+      check: function(){
+        var sel = -1;
+        items.forEach(function(x, i){ x.lab.classList.remove("wrong","right"); if(x.inp.checked) sel = i; });
+        if(sel < 0) return {incomplete:"Choose an answer first."};
+        if(sel === q.answer){ items[sel].lab.classList.add("right"); return {correct:true}; }
+        items[sel].lab.classList.add("wrong");
+        return {correct:false, hint:"That option is marked in red."};
+      },
+      reveal: function(){ items[q.answer].lab.classList.add("right"); items[q.answer].inp.checked = true; },
+      lock: function(){ items.forEach(function(x){ x.inp.disabled = true; }); }
+    };
+  },
+
+  order: function(q){
+    var list = shuffledDifferent(q.items.map(function(t, idx){ return {t:t, idx:idx}; }));
+    var ol = el("ol", {class:"order"});
+    var locked = false;
+    function draw(){
+      ol.innerHTML = "";
+      list.forEach(function(it, pos){
+        var up = el("button", {type:"button", class:"icon-btn", "aria-label":"Shift up: " + it.t, disabled: locked || pos === 0,
+          onclick:function(){ swap(pos, pos-1, "up"); }}, "\u25B2");
+        var dn = el("button", {type:"button", class:"icon-btn", "aria-label":"Shift down: " + it.t, disabled: locked || pos === list.length-1,
+          onclick:function(){ swap(pos, pos+1, "down"); }}, "\u25BC");
+        ol.appendChild(el("li", {class:"order-item"},
+          el("span", {class:"order-pos", "aria-hidden":"true"}, String(pos+1)),
+          el("span", {class:"order-text"}, it.t),
+          el("span", {class:"order-btns"}, up, dn)));
+      });
+    }
+    function swap(a, b, dir){
+      var t = list[a]; list[a] = list[b]; list[b] = t;
+      draw();
+      var li = ol.children[b];
+      var btns = li.querySelectorAll("button");
+      var target = dir === "up" ? btns[0] : btns[1];
+      if(target.disabled) target = dir === "up" ? btns[1] : btns[0];
+      target.focus();
+      live.textContent = list[b].t + " is now in position " + (b+1) + ".";
+    }
+    draw();
+    return {
+      el: el("div", null, el("p", {class:"help"}, "Use the arrow buttons to reorder. The top item comes first."), ol),
+      check: function(){
+        var ok = true;
+        list.forEach(function(it, pos){
+          var li = ol.children[pos];
+          li.classList.remove("wrong","right");
+          if(it.idx !== pos){ ok = false; li.classList.add("wrong"); } else li.classList.add("right");
+        });
+        return ok ? {correct:true} : {correct:false, hint:"Items marked in red are out of place."};
+      },
+      reveal: function(){
+        list = q.items.map(function(t, idx){ return {t:t, idx:idx}; });
+        draw();
+        Array.prototype.forEach.call(ol.children, function(li){ li.classList.add("right"); });
+      },
+      lock: function(){ locked = true; Array.prototype.forEach.call(ol.querySelectorAll("button"), function(b){ b.disabled = true; }); }
+    };
+  },
+
+  classify: function(q){
+    var wrap = el("div", {class:"classify"});
+    var rows = shuffle(q.items).map(function(it){
+      var name = uid();
+      var fs = el("fieldset", {class:"crow"}, el("legend", {class:"crow-label"}, it.text));
+      var seg = el("div", {class:"seg"});
+      var inputs = q.bins.map(function(b, bi){
+        var id = name + "_" + bi;
+        var inp = el("input", {type:"radio", name:name, id:id, value:String(bi)});
+        seg.appendChild(el("label", {for:id, class:"seg-opt"}, inp, el("span", null, b)));
+        return inp;
+      });
+      fs.appendChild(seg);
+      wrap.appendChild(fs);
+      return {fs:fs, inputs:inputs, answer:q.bins.indexOf(it.bin)};
+    });
+    return {
+      el: wrap,
+      check: function(){
+        var missing = rows.some(function(r){ return !r.inputs.some(function(x){ return x.checked; }); });
+        if(missing) return {incomplete:"Sort every item first."};
+        var wrong = 0;
+        rows.forEach(function(r){
+          var sel = r.inputs.findIndex(function(x){ return x.checked; });
+          r.fs.classList.toggle("wrong", sel !== r.answer);
+          r.fs.classList.toggle("right", sel === r.answer);
+          if(sel !== r.answer) wrong++;
+        });
+        return wrong ? {correct:false, hint: wrong + " of " + rows.length + " items are in the wrong group (marked in red)."} : {correct:true};
+      },
+      reveal: function(){
+        rows.forEach(function(r){ r.inputs[r.answer].checked = true; r.fs.classList.remove("wrong"); r.fs.classList.add("right"); });
+      },
+      lock: function(){ rows.forEach(function(r){ r.inputs.forEach(function(x){ x.disabled = true; }); }); }
+    };
+  },
+
+  match: function(q){
+    var opts = q.pairs.map(function(p){ return p.right; }).filter(function(v, i, a){ return a.indexOf(v) === i; });
+    opts = q.sortOptions ? opts.sort() : shuffle(opts);
+    var wrap = el("div", {class:"match"});
+    var rows = shuffle(q.pairs).map(function(p){
+      var id = uid();
+      var sel = el("select", {id:id}, el("option", {value:""}, "Choose\u2026"),
+        opts.map(function(o){ return el("option", {value:o}, o); }));
+      var row = el("div", {class:"mrow"}, el("label", {for:id, class:"mrow-label"}, p.left), sel);
+      wrap.appendChild(row);
+      return {row:row, sel:sel, answer:p.right};
+    });
+    return {
+      el: wrap,
+      check: function(){
+        if(rows.some(function(r){ return !r.sel.value; })) return {incomplete:"Make a choice for every row first."};
+        var wrong = 0;
+        rows.forEach(function(r){
+          var ok = r.sel.value === r.answer;
+          r.row.classList.toggle("wrong", !ok);
+          r.row.classList.toggle("right", ok);
+          if(!ok) wrong++;
+        });
+        return wrong ? {correct:false, hint: wrong + " of " + rows.length + " matches are off (marked in red)."} : {correct:true};
+      },
+      reveal: function(){ rows.forEach(function(r){ r.sel.value = r.answer; r.row.classList.remove("wrong"); r.row.classList.add("right"); }); },
+      lock: function(){ rows.forEach(function(r){ r.sel.disabled = true; }); }
+    };
+  }
+};
+
+/* ---------------- Views ---------------- */
+var resetArmed = false;
+function renderMap(){
+  updateHud();
+  resetArmed = false;
+  var v = el("section", {class:"view"});
+  v.appendChild(el("h2", {class:"view-title", tabindex:"-1"}, "Course Map"));
+  v.appendChild(el("p", {class:"lead"}, "Eight stations retrace the course from Module 1 to Module 11. Read each recap, clear the challenge, and earn the badge. Stations unlock in order."));
+  v.appendChild(el("div", {class:"card rules"},
+    el("h3", null, "How scoring works"),
+    el("p", null, "A correct answer earns 10 XP on the first try, 5 on the second, and 2 on the third. After three misses the answer appears and you go on with 0 XP. Replay any station; your best score counts.")));
+  var ol = el("ol", {class:"trail"});
+  STATIONS.forEach(function(st, i){
+    var done = !!state.done[st.id], open = isUnlocked(i);
+    var status = done ? (st.type === "reflect" ? "Complete" : "Complete \u00B7 " + state.done[st.id].xp + "/" + st.questions.length*10 + " XP")
+      : open ? "Ready" : "Locked";
+    var btn = el("button", {type:"button", class:"stop " + (done ? "is-done" : open ? "is-open" : "is-locked"), disabled: !open,
+        "aria-label":"Station " + (i+1) + ": " + st.title + ". " + status, onclick:function(){ startStation(i); }},
+      el("span", {class:"node", "aria-hidden":"true"}, done ? "\u2713" : String(i+1)),
+      el("span", {class:"stop-text"}, el("span", {class:"stop-title"}, st.title), el("span", {class:"stop-meta"}, st.modules + " \u00B7 " + status)));
+    ol.appendChild(el("li", null, btn));
+  });
+  v.appendChild(ol);
+  var acts = el("div", {class:"actions"});
+  if(allDone()) acts.appendChild(el("button", {type:"button", class:"btn primary", onclick:renderFinal}, "See final results"));
+  var reset = el("button", {type:"button", class:"btn link"}, "Reset my progress");
+  reset.addEventListener("click", function(){
+    if(!resetArmed){ resetArmed = true; reset.textContent = "Select again to erase all progress"; reset.classList.add("danger"); return; }
+    state = {done:{}, reflection:{adopter:null, text:""}}; save(); renderMap(); live.textContent = "Progress reset.";
+  });
+  acts.appendChild(reset);
+  v.appendChild(acts);
+  mount(v);
+}
+
+function startStation(i){
+  if(!isUnlocked(i)) return;
+  S = {i:i, q:0, attempts:0, xp:0};
+  renderIntro();
+}
+
+function renderIntro(){
+  var st = STATIONS[S.i];
+  updateHud();
+  var v = el("section", {class:"view"});
+  v.appendChild(backBtn());
+  v.appendChild(el("p", {class:"eyebrow"}, "Station " + (S.i+1) + " of " + STATIONS.length + " \u00B7 " + st.modules));
+  v.appendChild(el("h2", {class:"view-title", tabindex:"-1"}, st.title));
+  v.appendChild(el("div", {class:"card"}, el("h3", null, "Recap"), st.summary.map(function(p){ return el("p", null, p); })));
+  if(st.type === "reflect"){ v.appendChild(renderReflect()); }
+  else {
+    v.appendChild(el("div", {class:"actions"},
+      el("button", {type:"button", class:"btn primary", onclick:function(){ S.q = 0; S.xp = 0; renderQuestion(); }},
+        "Start the challenge (" + st.questions.length + " questions, " + st.questions.length*10 + " XP)")));
+  }
+  mount(v);
+}
+
+function renderQuestion(){
+  var st = STATIONS[S.i], q = st.questions[S.q];
+  S.attempts = 0;
+  var v = el("section", {class:"view"});
+  v.appendChild(backBtn());
+  var xpChip = el("span", {class:"station-xp"}, "Station XP: " + S.xp);
+  v.appendChild(el("p", {class:"eyebrow"}, st.title + " \u00B7 Question " + (S.q+1) + " of " + st.questions.length, xpChip));
+  var dots = el("div", {class:"dots", "aria-hidden":"true"});
+  st.questions.forEach(function(_, k){ dots.appendChild(el("span", {class: k < S.q ? "past" : k === S.q ? "on" : ""})); });
+  v.appendChild(dots);
+  if(st.exhibit) v.appendChild(el("div", {class:"exhibit", html:st.exhibit}));
+  v.appendChild(el("h2", {class:"view-title q-prompt", tabindex:"-1"}, q.prompt));
+  var w = TYPES[q.type](q);
+  v.appendChild(w.el);
+  var fb = el("div", {class:"feedback", role:"status", "aria-live":"polite"});
+  var checkBtn = el("button", {type:"button", class:"btn primary"}, "Check answer");
+  var last = S.q + 1 >= st.questions.length;
+  var nextBtn = el("button", {type:"button", class:"btn primary", hidden:true}, last ? "Finish station" : "Next question");
+  function show(kind, head, body){
+    fb.className = "feedback " + kind;
+    fb.innerHTML = "";
+    fb.appendChild(el("strong", null, head));
+    if(body) fb.appendChild(el("p", null, body));
+  }
+  function done(){ checkBtn.hidden = true; nextBtn.hidden = false; xpChip.textContent = "Station XP: " + S.xp; nextBtn.focus(); }
+  checkBtn.addEventListener("click", function(){
+    var r = w.check();
+    if(r.incomplete){ show("warn", r.incomplete); return; }
+    S.attempts++;
+    if(r.correct){
+      var pts = [0,10,5,2][S.attempts] || 2;
+      S.xp += pts; w.lock();
+      show("good", "Correct! +" + pts + " XP", q.explain);
+      popXp(pts); done();
+    } else if(S.attempts >= 3){
+      w.reveal(); w.lock();
+      show("bad", "Not quite. The correct answer is now shown. +0 XP", q.explain);
+      done();
+    } else {
+      var left = 3 - S.attempts;
+      show("bad", "Not quite. " + (r.hint || ""), "Try again. " + left + (left === 1 ? " try" : " tries") + " left.");
+    }
+  });
+  nextBtn.addEventListener("click", function(){
+    if(!last){ S.q++; renderQuestion(); } else renderStationComplete();
+  });
+  v.appendChild(el("div", {class:"actions"}, checkBtn, nextBtn));
+  v.appendChild(fb);
+  mount(v);
+}
+
+function renderStationComplete(){
+  var st = STATIONS[S.i], max = st.questions.length*10;
+  var prev = state.done[st.id] ? state.done[st.id].xp : -1;
+  state.done[st.id] = {xp: Math.max(prev, S.xp)};
+  save(); updateHud();
+  var v = el("section", {class:"view center"});
+  v.appendChild(badgeSvg(S.i, true, "badge-big"));
+  v.appendChild(el("p", {class:"eyebrow"}, "Station " + (S.i+1) + " complete"));
+  v.appendChild(el("h2", {class:"view-title", tabindex:"-1"}, "Badge earned: " + st.badge));
+  var msg = "You scored " + S.xp + " of " + max + " XP.";
+  if(prev > S.xp) msg += " Your earlier best of " + prev + " XP still counts.";
+  v.appendChild(el("p", {class:"lead"}, msg));
+  var acts = el("div", {class:"actions center"});
+  if(S.i + 1 < STATIONS.length){
+    var ni = S.i + 1;
+    acts.appendChild(el("button", {type:"button", class:"btn primary", onclick:function(){ startStation(ni); }}, "Next: " + STATIONS[ni].title));
+  }
+  var ri = S.i;
+  acts.appendChild(el("button", {type:"button", class:"btn", onclick:renderMap}, "Back to the map"));
+  acts.appendChild(el("button", {type:"button", class:"btn", onclick:function(){ startStation(ri); }}, "Replay this station"));
+  v.appendChild(acts);
+  mount(v);
+  live.textContent = "Badge earned: " + st.badge + ". " + msg;
+  celebrate();
+}
+
+function renderReflect(){
+  var box = el("div", {class:"reflect"});
+  var fs = el("fieldset", {class:"choices adopters"}, el("legend", null, "Where are you on Rogers' curve now, compared to Module 1?"));
+  ADOPTERS.forEach(function(c, i){
+    var id = "adopt" + i;
+    var inp = el("input", {type:"radio", name:"adopter", id:id, value:c});
+    if(state.reflection.adopter === c) inp.checked = true;
+    fs.appendChild(el("label", {for:id, class:"choice"}, inp, el("span", null, c)));
+  });
+  var ta = el("textarea", {id:"reflect-text", rows:"4"});
+  ta.value = state.reflection.text || "";
+  var msg = el("div", {class:"feedback", role:"status", "aria-live":"polite"});
+  var fin = el("button", {type:"button", class:"btn primary"}, "Save and see final results");
+  fin.addEventListener("click", function(){
+    var sel = fs.querySelector("input:checked");
+    if(!sel){ msg.className = "feedback warn"; msg.textContent = "Pick a spot on the curve first."; return; }
+    state.reflection = {adopter:sel.value, text:ta.value.trim()};
+    state.done.reflect = {xp:0};
+    save();
+    renderFinal();
+    celebrate();
+  });
+  box.appendChild(fs);
+  box.appendChild(el("label", {for:"reflect-text", class:"ta-label"},
+    "Optional: name one challenge in your own setting you'd now address with an emerging technology, and the human check you'd keep in place."));
+  box.appendChild(ta);
+  box.appendChild(el("div", {class:"actions"}, fin));
+  box.appendChild(msg);
+  return box;
+}
+
+function renderFinal(){
+  updateHud();
+  var xp = totalXP(), r = rank(xp);
+  var v = el("section", {class:"view"});
+  v.appendChild(el("p", {class:"eyebrow"}, "Final results"));
+  v.appendChild(el("h2", {class:"view-title", tabindex:"-1"}, xp + " of " + MAX_XP + " XP \u00B7 " + r.name));
+  v.appendChild(el("p", {class:"lead"}, r.text + " (Your XP rank is just for fun. Your own self-rating below is the one that counts.)"));
+  var grid = el("div", {class:"badges"});
+  STATIONS.forEach(function(st, i){
+    var earned = !!state.done[st.id];
+    grid.appendChild(el("figure", {class:"badge-cell" + (earned ? " earned" : "")}, badgeSvg(i, earned),
+      el("figcaption", null, earned ? st.badge : st.badge + " (locked)")));
+  });
+  v.appendChild(el("div", {class:"card"}, el("h3", null, "Your badges (" + badgeCount() + " of " + STATIONS.length + ")"), grid));
+
+  var lines = ["EME 6626 Summary Quest, Fall 2026",
+    "Score: " + xp + " of " + MAX_XP + " XP (" + r.name + ")",
+    "Badges: " + badgeCount() + " of " + STATIONS.length,
+    "Where I am on Rogers' curve now: " + (state.reflection.adopter || "not chosen yet")];
+  if(state.reflection.text) lines.push("Challenge I'd address, and the human check I'd keep: " + state.reflection.text);
+  var text = lines.join("\n");
+  var copyBox = el("textarea", {class:"copybox", rows:"6", readonly:true, "aria-label":"Your results as text"});
+  copyBox.value = text;
+  var copyMsg = el("span", {role:"status", "aria-live":"polite", class:"help"});
+  var copyBtn = el("button", {type:"button", class:"btn"}, "Copy my results");
+  copyBtn.addEventListener("click", function(){
+    function fallback(){
+      copyBox.focus(); copyBox.select();
+      var ok = false; try{ ok = document.execCommand("copy"); }catch(e){}
+      copyMsg.textContent = ok ? " Copied." : " Select the text above and copy it manually.";
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ copyMsg.textContent = " Copied."; }, fallback);
+    } else fallback();
+  });
+  v.appendChild(el("div", {class:"card"}, el("h3", null, "Share in the discussion"),
+    el("p", null, "Paste this into the course discussion if you'd like to compare where you landed with classmates."),
+    copyBox, el("div", {class:"actions"}, copyBtn, copyMsg)));
+
+  var acts = el("div", {class:"actions"});
+  acts.appendChild(el("button", {type:"button", class:"btn primary", onclick:renderMap}, "Back to the map"));
+  if(state.done.reflect) acts.appendChild(el("button", {type:"button", class:"btn", onclick:function(){ startStation(STATIONS.length-1); }}, "Edit my reflection"));
+  v.appendChild(acts);
+  mount(v);
+}
+
+/* ---------------- Start ---------------- */
+renderMap();
+})();
+</script>
+</body>
+</html>
